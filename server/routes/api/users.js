@@ -13,18 +13,13 @@ const bodyparser= require("body-parser")
 const multer = require('multer');
 const GridFSBucket = require("mongodb").GridFSBucket;
 const fs = require("fs");
-// const mongoose = require("mongoose");
-// const Grid = require("gridfs-stream");
-// const conn = mongoose.connection;
-// Grid.mongo = mongoose.mongo;
-// const gfs = Grid(conn.db);
-//const { useUserStore } = require("../../src/stores/user.js");
+
 app.use(cookieParser());
 app.use(cors());
-////
-const storage = multer.memoryStorage(); // Stocare în memorie
+
+const storage = multer.memoryStorage(); 
 const upload = multer({ storage: storage });
-////
+
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization']
   const token = authHeader && authHeader.split(' ')[1]
@@ -33,20 +28,14 @@ function authenticateToken(req, res, next) {
 
     console.log(err)
     if (err) return res.sendStatus(403)
-    //
-
-    ///
     req.user = user
     next()
   })
 }
-
-////
 const databaseUrl =  process.env.DATABASE;
 // Add User
 router.post("/", async (req, res) => {
   const newUser = req.body;
-  //console.log(newUser)
   const users = await loadUsers();
   const query = { email: newUser.email };
   let userAlreadyRegistered = await users.find(query).toArray();
@@ -55,7 +44,6 @@ router.post("/", async (req, res) => {
     res.send({ msg: "There already is an acount with this email" });
     return;
   }
-
   await bcrypt.hash(newUser.password, 10, async function (err, hashedPass) {
     newUser.password = hashedPass;
     delete newUser.confirmPassword;
@@ -65,7 +53,6 @@ router.post("/", async (req, res) => {
   });
   res.status(201).send();
 });
-
 //Verify password
 router.post("/passCompare", async (req, res) => {
   const pendingUser = req.body.email;
@@ -120,11 +107,7 @@ router.get("/currentContact",async (req, res) => {
  const users = await loadUsers();
   const currentId = req.query.id;
   let updatedId = new ObjectId(`${currentId}`)
-  // let query = {_id: {$in: updatedIds}}
-  // const projection = { name: 1, avatar: 1 }; 
-
-const response = await users.findOne(updatedId);
-  //const response = await cursor.toArray()
+ const response = await users.findOne(updatedId);
   res.send(response)
 });
 
@@ -145,18 +128,9 @@ router.patch("/",  async (req, res) => {
   
  }
 })
-// Delete Order
-router.delete("/:id", async (req, res) => {
-  const orders = await loadUsers();
-  const query = { _id: new ObjectId(req.params.id) };
-  await orders.deleteOne(query);
-  res.status(200).send({});
-});
-
 async function loadUsers() {
   const client = await mongodb.MongoClient.connect(databaseUrl);
 
   return client.db("cards").collection("users");
 }
-
 module.exports = router;
